@@ -1,0 +1,12 @@
+BasedOnStyle: LLVM
+
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+IncludeBlocks: Regroup
+IndentWidth: 4
+TabWidth: 4
+SortIncludes: true
+SpacesBeforeTrailingComments: 3
+UseTab: AlignWithSpaces
