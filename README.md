@@ -235,7 +235,8 @@ reported and fatal. Any failure exits non-zero.
 
 ```
 .
-├── main.c                   # the whole program
+├── main.c                   # the program: options, format, the update loop
+├── xwire.h                  # the X11 transport: DISPLAY, .Xauthority, connect, handshake, sync
 ├── build.sh                 # release | debug | run | test | install | uninstall | clean
 ├── tests/init.sh            # harness, modelled on gnulib/coreutils init.sh
 ├── tests/fakex.c            # fake X server, so tests never touch a real display

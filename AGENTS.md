@@ -23,8 +23,8 @@ User-facing documentation is in `README.md`; this file is for people changing th
   archive.
 - **The build must stay clean under `-std=c17 -Weverything -Werror`.** Restructure the code rather than silencing a
   warning. `-Weverything` is not a stable interface — clang 22 has 1061 warning groups to clang 21's 1036 — so a
-  compiler upgrade can fail a clean build. When that happens, add a targeted `-Wno-` here; do not change `main.c`. This
-  risk was accepted knowingly.
+  compiler upgrade can fail a clean build. When that happens, add a targeted `-Wno-` here; do not change the C files.
+  This risk was accepted knowingly.
 - **What the gate is worth, measured.** A 41-bug injection sweep: `-Weverything` caught 26, `-Wall -Wextra` caught 12,
   the tests caught 13, **11 were caught by nothing**. Every `-Weverything`-only catch came from five groups —
   `-Wsign-conversion`, `-Wshorten-64-to-32`, `-Wimplicit-int-conversion`, `-Wtautological-unsigned-zero-compare`,
@@ -80,8 +80,8 @@ User-facing documentation is in `README.md`; this file is for people changing th
 - **Black box only. Do not add C unit tests.** The parsers were fuzzed with 275k inputs and an exhaustive boundary sweep
   under ASan+UBSan and came back clean, so unit tests would pin code already known correct. Every bug this program has
   had was reachable from outside. Same choice coreutils made: 722 tests, zero `.c` files under `tests/`.
-- **Assert against LITERAL X11 numbers** (18, 43, 31, 39, 0, 8), never `main.c`'s macro names. Mutating four constants
-  at once was demonstrated to leave macro-based assertions green.
+- **Assert against LITERAL X11 numbers** (18, 43, 31, 39, 0, 8), never the macro names in `main.c` or `xwire.h`.
+  Mutating four constants at once was demonstrated to leave macro-based assertions green.
 - **Every test must be seen to fail.** Break `main.c` deliberately, watch that test go red, restore. A test never
   observed failing is worse than none — it reads as coverage. Record the mutation in the comment block for a regression
   test.
@@ -126,8 +126,12 @@ User-facing documentation is in `README.md`; this file is for people changing th
 
 - **libc only.** No third-party dependencies, including X11 client libraries: speaking the protocol directly is the
   point of the project, and it must build on a machine with no X11 headers.
-- **Single translation unit**, everything `static`. Small enough that a header/source split would cost more than it
-  gives.
+- **Single translation unit**, everything `static`. `main.c` includes `xwire.h` textually; nothing is compiled
+  separately, which musl-clang could not do under the gate anyway.
+- **`xwire.h` is the X11 transport and nothing else**: DISPLAY parsing, the `.Xauthority` cookie, connect, handshake,
+  `x_sync` and `x_drain`. It is meant to be copied byte-for-byte into sibling programs, so it may depend on the includer
+  only through `PROGRAM_NAME`, which it prints in diagnostics and `#error`s without. Requests specific to this program
+  (`ChangeProperty`, the atoms) stay in `main.c`. A fix to the transport is a fix in every copy.
 - **Wire buffers are plain `uint8_t` arrays with explicit offsets**, never structs — structs invite padding and
   alignment assumptions on a wire protocol, and `-Wpadded` rejects them anyway. `get16be` exists separately because
   `.Xauthority` is big-endian while the connection is opened little-endian.

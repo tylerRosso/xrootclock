@@ -74,13 +74,14 @@ show_ ()
 # make_proj_ DIR -- a private copy of the project to build and install from.
 #
 # build.sh resolves its own directory through `readlink -f` and builds there, so
-# build.sh plus main.c is a complete project. If that ever stops being true this
-# fails loudly at the first build rather than silently testing $XRC_ROOT.
+# build.sh, main.c and xwire.h are a complete project. If that ever stops being
+# true this fails loudly at the first build rather than silently testing
+# $XRC_ROOT.
 make_proj_ ()
 {
 	mkdir -p "$1" || framework_failure_ "cannot create $1"
 
-	cp "$XRC_ROOT/build.sh" "$XRC_ROOT/main.c" "$1" ||
+	cp "$XRC_ROOT/build.sh" "$XRC_ROOT/main.c" "$XRC_ROOT/xwire.h" "$1" ||
 		framework_failure_ "cannot copy the project into $1"
 
 	test -x "$1/build.sh" || framework_failure_ "$1/build.sh is not executable"

@@ -74,7 +74,7 @@ make_proj_ ()
 {
 	mkdir -p "$1" || framework_failure_ "cannot create $1"
 
-	cp "$XRC_ROOT/build.sh" "$XRC_ROOT/main.c" "$1" ||
+	cp "$XRC_ROOT/build.sh" "$XRC_ROOT/main.c" "$XRC_ROOT/xwire.h" "$1" ||
 		framework_failure_ "cannot copy the project into $1"
 
 	test -x "$1/build.sh" || framework_failure_ "$1/build.sh is not executable"
