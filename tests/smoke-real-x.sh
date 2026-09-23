@@ -20,12 +20,12 @@
 # (XRC_TEST_REAL_X) and it restores the root WM_NAME from a cleanup_ override,
 # which runs on the failing and interrupted paths too.
 #
-# KNOWN RACE: a status bar (dwm-statusbar here) rewrites the root WM_NAME about
-# once a minute, and can overwrite our tag between the write and the read-back.
-# Each trial therefore gets up to 3 attempts. That absorbs the race without
-# weakening the assertion: a write that never reaches the server does not become
-# a write that does, however many times it is repeated -- with x_sync() removed
-# all 30 attempts fail, which is what the mutation run shows.
+# KNOWN RACE: whatever drives the user's status bar rewrites the root WM_NAME
+# about once a minute, and can overwrite our tag between the write and the
+# read-back. Each trial therefore gets up to 3 attempts. That absorbs the race
+# without weakening the assertion: a write that never reaches the server does
+# not become a write that does, however many times it is repeated -- with
+# x_sync() removed all 30 attempts fail, which is what the mutation run shows.
 
 . "${srcdir=.}/tests/init.sh"
 

@@ -4,22 +4,22 @@
 #
 # SAFETY -- DO NOT "SIMPLIFY" THIS AWAY: every build.sh invocation below passes
 # PREFIX explicitly, pointing at a directory inside this test's own temporary
-# directory. The default PREFIX is $HOME/.local, whose bin is the one personal
-# directory on this machine's PATH -- and this file runs `uninstall`, which
-# deletes. Letting the default stand here would remove the binary the user's
-# status bar is really running. build_sh_ refuses any PREFIX that is not under
-# this directory, so a later edit cannot quietly reintroduce that.
+# directory. The default PREFIX is $HOME/.local, whose bin is on the user's
+# real PATH -- and this file runs `uninstall`, which deletes. Letting the
+# default stand here would remove the binary the user's status bar is really
+# running. build_sh_ refuses any PREFIX that is not under this directory, so a
+# later edit cannot quietly reintroduce that.
 #
 # Everything is built and installed from a private COPY of the project, never
 # from $XRC_ROOT: install rebuilds, and one case below needs a project that has
 # never been built at all.
 #
 # WHAT IT PINS:
-#   - the PATH warning. ~/bin and ~/go/bin are not on this machine's PATH, so
-#     installing into either would leave the user wondering why the shell cannot
-#     find the program. The warning goes to STDERR -- a message on stdout would
-#     end up inside the output of anything that captures an install -- and it
-#     does not turn a successful install into a failure: exit 0.
+#   - the PATH warning. A prefix whose bin is not on PATH leaves the user
+#     wondering why the shell cannot find the program. The warning goes to
+#     STDERR -- a message on stdout would end up inside the output of anything
+#     that captures an install -- and it does not turn a successful install
+#     into a failure: exit 0.
 #   - no warning at all when the target directory IS on PATH.
 #   - uninstall removes the installed copy, says "removed", exits 0; a second
 #     uninstall says "nothing installed at" and STILL exits 0. Removing
@@ -28,8 +28,9 @@
 #     that has never been compiled, and it must not resurrect bin/ on the way
 #     out.
 #   - an unwritable $PREFIX/bin is refused with exit 1, and the message names
-#     su: there is no sudo and no doas on this machine, so a message that says
-#     "try sudo" is a dead end. Nothing must be installed in that case.
+#     su, the one privilege tool every system has; sudo or doas may be absent,
+#     so a message that says "try sudo" can be a dead end. Nothing must be
+#     installed in that case.
 
 . "${srcdir=.}/tests/init.sh"
 
@@ -261,7 +262,7 @@ grep -q 'is not writable' ro.err || {
 	fail=1
 }
 
-# There is no sudo and no doas here, so the way out has to be su.
+# sudo and doas may be absent; su is the one way out every system has.
 grep -q 'su -c' ro.err || {
 	warn_ "$ME_: the refusal does not name su:"
 	cat ro.err >&2

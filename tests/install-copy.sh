@@ -3,11 +3,11 @@
 #
 # SAFETY -- DO NOT "SIMPLIFY" THIS AWAY: every build.sh invocation below passes
 # PREFIX explicitly, pointing at a directory inside this test's own temporary
-# directory. The default PREFIX is $HOME/.local, whose bin is the one personal
-# directory on this machine's PATH: a test that let the default stand would
-# overwrite -- and, in tests/install-uninstall.sh, delete -- the binary the
-# user's status bar is really running. build_sh_ refuses any PREFIX that is not
-# under this directory, so a later edit cannot quietly reintroduce that.
+# directory. The default PREFIX is $HOME/.local, whose bin is on the user's
+# real PATH: a test that let the default stand would overwrite -- and, in
+# tests/install-uninstall.sh, delete -- the binary the user's status bar is
+# really running. build_sh_ refuses any PREFIX that is not under this
+# directory, so a later edit cannot quietly reintroduce that.
 #
 # Everything is built and installed from a private COPY of the project, never
 # from $XRC_ROOT: install rebuilds, and the clean case below deletes bin/, which

@@ -11,10 +11,9 @@
 #   ./build.sh uninstall    remove it again
 #   ./build.sh clean        remove bin/ and compile_commands.json
 #
-# PREFIX defaults to ~/.local, which is the only personal directory on this
-# machine's PATH. Override it for anywhere else:
-#     PREFIX=/usr/local ./build.sh install
-#     (needs root; there is no sudo here)
+# PREFIX defaults to ~/.local, the usual per-user prefix. Override it for
+# anywhere else:
+#     PREFIX=/usr/local ./build.sh install     (needs root)
 #
 # Builds a fully static musl binary. A full rebuild takes about 0.2s, so there
 # is no incremental build and no object files -- one compile-and-link, always
@@ -92,7 +91,7 @@ case "$COMMAND" in
 		# with a bare "Permission denied" and no way forward.
 		if [ ! -w "$bindir" ]; then
 			echo "$0: $bindir is not writable." >&2
-			echo "There is no sudo or doas on this machine; remove it as root with:" >&2
+			echo "Remove it as root, for example:" >&2
 			echo "    su -c \"rm -f '$target'\"" >&2
 			exit 1
 		fi
@@ -233,8 +232,7 @@ if [ "$COMMAND" = "install" ]; then
 
 	if [ ! -w "$bindir" ]; then
 		echo "$0: $bindir is not writable." >&2
-		echo "There is no sudo or doas here." \
-			"The build above succeeded, so copy it as root:" >&2
+		echo "The build above succeeded, so copy it as root, for example:" >&2
 		echo "    su -c \"install -T -m 755 '$PWD/$OUT' '$target'\"" >&2
 		echo "Do not re-run this script under plain su: su resets HOME," \
 			"so \$HOME/bin/musl-clang" >&2
@@ -249,10 +247,10 @@ if [ "$COMMAND" = "install" ]; then
 	install -T -m 755 "$OUT" "$target"
 	echo "installed $target"
 
-	# ~/bin is NOT on this machine's PATH, and neither is ~/go/bin -- an easy way
-	# to install something and then wonder why the shell cannot find it. Both
-	# sides are resolved before comparing, so a different spelling of the same
-	# directory does not produce a false warning.
+	# A prefix's bin is not necessarily on PATH (~/bin often is not) -- an easy
+	# way to install something and then wonder why the shell cannot find it.
+	# Both sides are resolved before comparing, so a different spelling of the
+	# same directory does not produce a false warning.
 	on_path=$(
 		IFS=:
 		for dir in $PATH; do
