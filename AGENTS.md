@@ -121,6 +121,9 @@ User-facing documentation is in `README.md`; this file is for people changing th
 - **A slower binary can hide a race.** The ASan build wins the write/exit race 8-10/10 where an ordinary build wins
   0-1/10. If a bug vanishes under a sanitizer, suspect timing.
 - Syscall counts in `README.md` are measured. Re-measure before editing them.
+- **A new source file must be added to `make_proj_`** in `tests/install-copy.sh` and
+  `tests/install-uninstall.sh`. They build from a copy made of the files named there, so a file the compiler
+  needs and the copy lacks fails both tests at the first build. `xwire.h` was caught exactly this way.
 
 ## Code Conventions
 
@@ -146,6 +149,10 @@ User-facing documentation is in `README.md`; this file is for people changing th
   disconnecting client's unread input. `x_sync()` must stay on every exit path.
 - **Sleep on absolute deadlines** (`TIMER_ABSTIME` on `CLOCK_REALTIME`). A relative sleep reintroduces drift and stops
   the clock following NTP steps and resume-from-suspend.
+- **Comments and messages describe any machine, not this one.** The repository is public. Never state what is
+  on this machine's PATH, which privilege tools it has or lacks, what runs on its desktop, or how another
+  project is set up; say what is true everywhere. The install refusals name `su` because it is the one
+  privilege tool every system has, not because `sudo` is absent.
 
 ## Version Control
 
