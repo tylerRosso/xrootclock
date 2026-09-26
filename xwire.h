@@ -500,15 +500,14 @@ static bool x_handshake(int file_descriptor, const uint8_t *cookie, uint16_t coo
 
 /* Block until the server has caught up, the way XSync does it.
  *
- * ChangeProperty generates no reply, so writing it and exiting immediately is a
- * race the client loses: the server sees the disconnect with the request still
- * unread and discards it, and the property is never set. GetInputFocus is the
- * canonical no-op round trip -- it always succeeds and always replies, and
- * because one client's requests are processed in order, its reply proves every
- * earlier request has been applied.
+ * A request that generates no reply, written just before exiting, is a race the
+ * client loses: the server sees the disconnect with the request still unread
+ * and discards it. GetInputFocus is the canonical no-op round trip -- it always
+ * succeeds and always replies, and because one client's requests are processed
+ * in order, its reply proves every earlier request has been applied.
  *
- * Only needed before exiting. Inside the update loop the sleep is round trips
- * longer than the server needs, so the steady state stays at three syscalls. */
+ * Events that arrive ahead of the reply are read and discarded, so a client
+ * that selects events loses any that come in during a sync. */
 static bool x_sync(int file_descriptor)
 {
 	uint8_t request[4];
@@ -548,8 +547,9 @@ static bool x_sync(int file_descriptor)
 	}
 }
 
-/* Drain whatever the server pushed back. Nothing is expected, so anything that
- * arrives is an error event worth reporting rather than silently discarding. */
+/* Read whatever the server has sent, without blocking. An error is reported and
+ * ends the drain with false; anything else is discarded, which suits a client
+ * that expects no replies and selects no events. */
 static bool x_drain(int file_descriptor)
 {
 	uint8_t event[32];
