@@ -135,6 +135,11 @@ User-facing documentation is in `README.md`; this file is for people changing th
   `x_sync` and `x_drain`. It is meant to be copied byte-for-byte into sibling programs, so it may depend on the includer
   only through `PROGRAM_NAME`, which it prints in diagnostics and `#error`s without. Requests specific to this program
   (`ChangeProperty`, the atoms) stay in `main.c`. A fix to the transport is a fix in every copy.
+  - It turns `-Wunused-function` off for its own body, between a `#pragma clang diagnostic push` and `pop`: a sibling
+    that uses only some of the functions would otherwise fail the gate. This is the one warning silenced rather than
+    designed away, and it is scoped so the includer's own file keeps it. Both alternatives were measured and rejected:
+    `static inline` changes clang's inlining and with it the release binary's bytes, and `__attribute__((unused))`
+    trips `-Wused-but-marked-unused` in every program that does call the function.
 - **Wire buffers are plain `uint8_t` arrays with explicit offsets**, never structs — structs invite padding and
   alignment assumptions on a wire protocol, and `-Wpadded` rejects them anyway. `get16be` exists separately because
   `.Xauthority` is big-endian while the connection is opened little-endian.

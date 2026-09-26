@@ -10,7 +10,14 @@
  * The one thing it takes from the includer is PROGRAM_NAME, which prefixes its
  * diagnostics. Keep it program-agnostic: requests specific to a program belong
  * next to that program's main(). A copy of this file in another program is
- * expected to stay byte-identical, so a fix here is a fix there. */
+ * expected to stay byte-identical, so a fix here is a fix there.
+ *
+ * Not every program uses every function, and -Wunused-function would reject
+ * the ones it leaves out, so that one warning is off between the push and the
+ * pop below and nowhere else. The alternatives were measured: `static inline`
+ * silences it too, but changes what clang inlines, so xrootclock's release
+ * binary is no longer byte for byte the same; __attribute__((unused)) trips
+ * -Wused-but-marked-unused in every program that does call the function. */
 
 #ifndef XWIRE_H
 #define XWIRE_H
@@ -54,6 +61,9 @@
 
 /* pad4() is a function, so the wire buffer needs a constant bound of its own. */
 #define MAX_SETUP_REQUEST (12 + 20 + MAX_COOKIE)
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -586,5 +596,7 @@ static bool x_drain(int file_descriptor)
 		}
 	}
 }
+
+#pragma clang diagnostic pop
 
 #endif /* XWIRE_H */
