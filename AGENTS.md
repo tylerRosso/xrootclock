@@ -78,8 +78,9 @@ User-facing documentation is in `README.md`; this file is for people changing th
 - `./build.sh test` builds the program and `tests/fakex.c`, then runs every `tests/*.sh`. `tests/init.sh` is the harness
   and is skipped by the runner.
 - **Black box only. Do not add C unit tests.** The parsers were fuzzed with 275k inputs and an exhaustive boundary sweep
-  under ASan+UBSan and came back clean, so unit tests would pin code already known correct. Every bug this program has
-  had was reachable from outside. Same choice coreutils made: 722 tests, zero `.c` files under `tests/`.
+  under ASan+UBSan and came back clean, as did `load_cookie` with 1.79M more when it was rewritten to read the file one
+  record at a time, so unit tests would pin code already known correct. Every bug this program has had was reachable
+  from outside. Same choice coreutils made: 722 tests, zero `.c` files under `tests/`.
 - **Assert against LITERAL X11 numbers** (18, 43, 31, 39, 0, 8), never the macro names in `main.c` or `xwire.h`.
   Mutating four constants at once was demonstrated to leave macro-based assertions green.
 - **Every test must be seen to fail.** Break `main.c` deliberately, watch that test go red, restore. A test never

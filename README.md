@@ -178,7 +178,7 @@ TEST_TIMEOUT=120 ./build.sh test   # slower machine
 ```
 
 ```
-34 passed, 0 failed, 1 skipped, 0 errored
+35 passed, 0 failed, 1 skipped, 0 errored
 ```
 
 **Black box only** — every test runs the built binary and checks what it did; there are no C unit tests. `tests/fakex.c`
@@ -215,8 +215,9 @@ requests are processed in order, that reply proves the property was applied. Wit
 far longer than the server needs, so the steady state stays at three syscalls.
 
 **Authentication.** The cookie comes from `$XAUTHORITY`, falling back to `$HOME/.Xauthority`, matched on method and
-display number, preferring a `FamilyLocal` entry for this host and accepting `FamilyWild`. A missing or unreadable file
-is not fatal — the connection is attempted anonymously and the server decides.
+display number, preferring a `FamilyLocal` entry for this host and accepting `FamilyWild`. The file is read one record
+at a time, so its size is no limit. A missing or unreadable file is not fatal — the connection is attempted anonymously
+and the server decides.
 
 **`STRING` versus UTF-8.** The property is written as `STRING`, matching `xsetroot -name`. That is formally Latin-1, but
 bytes pass through verbatim and dwm copies a `STRING` property raw, so UTF-8 renders fine in practice. Protocol-correct
@@ -240,7 +241,7 @@ reported and fatal. Any failure exits non-zero.
 ├── build.sh                 # release | debug | run | test | install | uninstall | clean
 ├── tests/init.sh            # harness, modelled on gnulib/coreutils init.sh
 ├── tests/fakex.c            # fake X server, so tests never touch a real display
-├── tests/*.sh               # 35 black-box tests
+├── tests/*.sh               # 36 black-box tests
 ├── .clang-format            # clang-format style for the C files
 ├── .gitignore
 ├── .vscode/                 # lldb-dap launch config and build tasks, tracked on purpose

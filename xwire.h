@@ -56,7 +56,7 @@
 
 /* Buffer ceilings. Small enough to keep every buffer on the stack. */
 #define MAX_COOKIE 64
-#define MAX_AUTHFILE 65536
+#define MAX_AUTH_NUMBER 32
 #define MAX_SETUP 65536
 
 /* pad4() is a function, so the wire buffer needs a constant bound of its own. */
@@ -226,18 +226,43 @@ static bool parse_display(const char *display, char *path, size_t path_size, cha
 
 /* ------------------------------------------------------------------- auth */
 
+/* Read one length-prefixed .Xauthority field. Its length is reported whatever
+ * it is; its bytes land in BUFFER only when they fit CAPACITY, and are read
+ * past otherwise, since a field longer than the buffer meant for it cannot be
+ * one this program matches. The file ending inside the field is a truncated
+ * record: false. */
+static bool read_auth_field(FILE *stream, uint8_t *buffer, size_t capacity, size_t *length)
+{
+	uint8_t prefix[2];
+	size_t  left;
+
+	if (fread(prefix, 1, sizeof prefix, stream) != sizeof prefix)
+		return false;
+
+	*length = get16be(prefix);
+	left    = *length;
+
+	while (left > 0)
+	{
+		size_t chunk = (left < capacity) ? left : capacity;
+
+		if (fread(buffer, 1, chunk, stream) != chunk)
+			return false;
+
+		left -= chunk;
+	}
+
+	return true;
+}
+
 /* Pull the MIT-MAGIC-COOKIE-1 entry for this display out of .Xauthority.
  * A missing or unreadable file is not fatal: servers configured without
  * access control accept an empty cookie, so we let the handshake decide. */
 static bool load_cookie(const char *number, uint8_t *cookie, uint16_t *cookie_length)
 {
-	static uint8_t contents[MAX_AUTHFILE];
-
 	const char *path = getenv("XAUTHORITY");
 	char        fallback[PATH_MAX];
 	FILE       *stream        = NULL;
-	size_t      total         = 0;
-	size_t      offset        = 0;
 	char        hostname[256] = "";
 	bool        found         = false;
 	int         written;
@@ -264,77 +289,74 @@ static bool load_cookie(const char *number, uint8_t *cookie, uint16_t *cookie_le
 	if (stream == NULL)
 		return false;
 
-	total = fread(contents, 1, sizeof contents, stream);
-	fclose(stream);
-
 	if (gethostname(hostname, sizeof hostname) != 0)
 		hostname[0] = '\0';
 
 	hostname[sizeof hostname - 1] = '\0';
 
-	/* family, then four length-prefixed fields: address, number, name, data. */
-	while (offset + 2 <= total)
+	/* The file is a flat sequence of records: a family, then four
+	 * length-prefixed fields -- address, display number, method name, data.
+	 * It is read a record at a time, so its size is no limit; each field has
+	 * a bound instead, as large as anything that could match. A field longer
+	 * than its bound was read past, not into its buffer, so every length is
+	 * compared before the bytes are. The record the file ends inside is
+	 * incomplete and ends the walk. */
+	for (;;)
 	{
-		uint16_t    family = get16be(contents + offset);
-		const char *field[4];
-		uint16_t    field_length[4];
-		bool        truncated = false;
-		bool        preferred;
+		uint8_t  prefix[2];
+		uint8_t  address[sizeof hostname];
+		uint8_t  entry_number[MAX_AUTH_NUMBER];
+		uint8_t  name[AUTH_METHOD_LEN];
+		uint8_t  data[MAX_COOKIE];
+		size_t   address_length;
+		size_t   entry_number_length;
+		size_t   name_length;
+		size_t   data_length;
+		uint16_t family;
+		bool     preferred;
 
-		offset += 2;
-
-		for (size_t i = 0; i < 4; i++)
-		{
-			if (offset + 2 > total)
-			{
-				truncated = true;
-
-				break;
-			}
-
-			field_length[i] = get16be(contents + offset);
-			offset += 2;
-
-			if (offset + field_length[i] > total)
-			{
-				truncated = true;
-
-				break;
-			}
-
-			field[i] = (const char *)(contents + offset);
-			offset += field_length[i];
-		}
-
-		if (truncated)
+		if (fread(prefix, 1, sizeof prefix, stream) != sizeof prefix)
 			break;
 
-		if (field_length[2] != AUTH_METHOD_LEN || memcmp(field[2], AUTH_METHOD, AUTH_METHOD_LEN) != 0)
+		family = get16be(prefix);
+
+		if (!read_auth_field(stream, address, sizeof address, &address_length) ||
+		    !read_auth_field(stream, entry_number, sizeof entry_number, &entry_number_length) ||
+		    !read_auth_field(stream, name, sizeof name, &name_length) ||
+		    !read_auth_field(stream, data, sizeof data, &data_length))
+			break;
+
+		if (name_length != AUTH_METHOD_LEN || memcmp(name, AUTH_METHOD, AUTH_METHOD_LEN) != 0)
 			continue;
 
-		if (field_length[1] != strlen(number) || memcmp(field[1], number, field_length[1]) != 0)
+		if (entry_number_length > sizeof entry_number || entry_number_length != strlen(number) ||
+		    memcmp(entry_number, number, entry_number_length) != 0)
 			continue;
 
 		if (family != AUTH_FAMILY_LOCAL && family != AUTH_FAMILY_WILD)
 			continue;
 
-		if (field_length[3] == 0 || field_length[3] > MAX_COOKIE)
+		if (data_length == 0 || data_length > MAX_COOKIE)
 			continue;
 
-		/* Prefer the entry naming this host, but accept a wildcard one. */
-		preferred = (family == AUTH_FAMILY_LOCAL && hostname[0] != '\0' && field_length[0] == strlen(hostname) &&
-		             memcmp(field[0], hostname, field_length[0]) == 0);
+		/* Prefer the entry naming this host, but accept a wildcard one. The
+		 * hostname is shorter than the address buffer, so an address of its
+		 * length was read in full. */
+		preferred = (family == AUTH_FAMILY_LOCAL && hostname[0] != '\0' && address_length == strlen(hostname) &&
+		             memcmp(address, hostname, address_length) == 0);
 
 		if (found && !preferred)
 			continue;
 
-		memcpy(cookie, field[3], field_length[3]);
-		*cookie_length = field_length[3];
+		memcpy(cookie, data, data_length);
+		*cookie_length = (uint16_t)data_length;
 		found          = true;
 
 		if (preferred)
 			break;
 	}
+
+	fclose(stream);
 
 	return found;
 }
