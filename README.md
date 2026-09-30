@@ -139,8 +139,9 @@ incremental build: one compile-and-link, always from scratch. Every build regene
 `clang -MJ` (no `bear` needed), so clangd sees the real flags and musl sysroot.
 
 Notable flags, all verified against this toolchain: `-fstack-protector-strong` is free (identical stripped size), `-Os`
-is immaterial (63120 bytes at every level from `-O1` to `-Oz`), and the debug build carries
-`-fsanitize=undefined,local-bounds -fsanitize-minimal-runtime` — the only sanitizer that links against static musl.
+is 4096 bytes smaller (63136 against 67232 at `-O1`, `-O2` and `-O3`; `-Oz` is no smaller), and the debug build
+carries `-fsanitize=undefined,local-bounds -fsanitize-minimal-runtime` — the only sanitizer that links against static
+musl.
 Tested and rejected: `-static` (redundant), `-D_FORTIFY_SOURCE` and `-Wl,-z,relro,now` (no-ops here), `-static-pie`
 (builds, but the result cannot run).
 
