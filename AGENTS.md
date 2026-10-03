@@ -168,6 +168,8 @@ User-facing documentation is in `README.md`; this file is for people changing th
 - `.vscode/` is tracked on purpose: the lldb-dap launch config and the build tasks are project setup, not personal
   preference. Do not add it to `.gitignore`.
 - **Committing is the owner's call.** Leave changes in the working directory for review.
+- **The version lives in `VERSION` in `main.c` and nowhere else**; `-v` prints it as `xrootclock-VERSION`, and
+  `args-version` pins that form, not the value. A release changes it and tags the commit `vVERSION`.
 
 ### Commit messages — coreutils/gnulib style
 

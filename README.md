@@ -95,6 +95,7 @@ xrootclock [-i SECONDS] [-1] [-u] [FORMAT]
 | `-1`, `--once` | off | Update once and exit — a drop-in for `xsetroot -name` |
 | `-u`, `--upper` | off | Upper-case the ASCII letters in the result |
 | `-h`, `--help` | — | Show usage |
+| `-v`, `--version` | — | Show the version |
 
 `FORMAT` is any `strftime(3)` format string, defaulting to `" %a %m%d%y %I%M "` — the spaces on both sides pad it away
 from the bar edges.
@@ -179,7 +180,7 @@ TEST_TIMEOUT=120 ./build.sh test   # slower machine
 ```
 
 ```
-35 passed, 0 failed, 1 skipped, 0 errored
+36 passed, 0 failed, 1 skipped, 0 errored
 ```
 
 **Black box only** — every test runs the built binary and checks what it did; there are no C unit tests. `tests/fakex.c`
@@ -242,7 +243,7 @@ reported and fatal. Any failure exits non-zero.
 ├── build.sh                 # release | debug | run | test | install | uninstall | clean
 ├── tests/init.sh            # harness, modelled on gnulib/coreutils init.sh
 ├── tests/fakex.c            # fake X server, so tests never touch a real display
-├── tests/*.sh               # 36 black-box tests
+├── tests/*.sh               # 37 black-box tests
 ├── .clang-format            # clang-format style for the C files
 ├── .gitignore
 ├── .vscode/                 # lldb-dap launch config and build tasks, tracked on purpose

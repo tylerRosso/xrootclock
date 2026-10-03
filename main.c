@@ -27,6 +27,9 @@
 #include <time.h>
 #include <unistd.h>
 
+/* The one place the version lives; a release changes it and tags vVERSION. */
+#define VERSION "1.0"
+
 /* The user-visible defaults. */
 #define DEFAULT_FORMAT " %a %m%d%y %I%M "
 #define DEFAULT_INTERVAL 60
@@ -129,6 +132,7 @@ static void usage(FILE *stream)
 	        "  -1          update once and exit\n"
 	        "  -u          upper-case the ASCII letters in the result\n"
 	        "  -h          show this help\n"
+	        "  -v          show the version\n"
 	        "\n"
 	        "FORMAT defaults to '%s'.\n",
 	        DEFAULT_INTERVAL, DEFAULT_FORMAT);
@@ -157,6 +161,13 @@ int main(int argc, char *argv[])
 		if (strcmp(option, "-h") == 0 || strcmp(option, "--help") == 0)
 		{
 			usage(stdout);
+
+			return EXIT_SUCCESS;
+		}
+
+		if (strcmp(option, "-v") == 0 || strcmp(option, "--version") == 0)
+		{
+			fputs(PROGRAM_NAME "-" VERSION "\n", stdout);
 
 			return EXIT_SUCCESS;
 		}
