@@ -7,6 +7,8 @@ ColumnLimit: 120
 IncludeBlocks: Regroup
 IndentWidth: 4
 TabWidth: 4
+KeepEmptyLines:
+  AtStartOfBlock: false
 SortIncludes: true
 SpacesBeforeTrailingComments: 3
 UseTab: AlignWithSpaces
